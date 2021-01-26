@@ -7,24 +7,27 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/bank"
+	"github.com/cosmos/cosmos-sdk/x/mint"
+	"github.com/cosmos/cosmos-sdk/x/supply"
 	"github.com/raneet10/requestmoney/x/requestmoney/types"
 )
 
 // Keeper of the requestmoney store
 type Keeper struct {
-	CoinKeeper bank.Keeper
-	storeKey   sdk.StoreKey
-	cdc        *codec.Codec
+	MintKeeper   mint.Keeper
+	SupplyKeeper supply.Keeper
+	storeKey     sdk.StoreKey
+	cdc          *codec.Codec
 	// paramspace types.ParamSubspace
 }
 
 // NewKeeper creates a requestmoney keeper
-func NewKeeper(coinKeeper bank.Keeper, cdc *codec.Codec, key sdk.StoreKey) Keeper {
+func NewKeeper(mintKeeper mint.Keeper, supplyKeeper supply.Keeper, cdc *codec.Codec, key sdk.StoreKey) Keeper {
 	keeper := Keeper{
-		CoinKeeper: coinKeeper,
-		storeKey:   key,
-		cdc:        cdc,
+		MintKeeper:   mintKeeper,
+		SupplyKeeper: supplyKeeper,
+		storeKey:     key,
+		cdc:          cdc,
 		// paramspace: paramspace.WithKeyTable(types.ParamKeyTable()),
 	}
 	return keeper

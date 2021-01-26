@@ -22,7 +22,8 @@ func GetTxCmd(cdc *codec.Codec) *cobra.Command {
 	}
 
 	requestmoneyTxCmd.AddCommand(flags.PostCommands(
-    // this line is used by starport scaffolding # 1
+		// this line is used by starport scaffolding # 1
+		GetCmdCreateRequest(cdc),
 	)...)
 
 	return requestmoneyTxCmd

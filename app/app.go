@@ -19,33 +19,36 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
+	"github.com/cosmos/cosmos-sdk/x/mint"
 	"github.com/cosmos/cosmos-sdk/x/params"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	"github.com/cosmos/cosmos-sdk/x/supply"
 	"github.com/raneet10/requestmoney/x/requestmoney"
 	requestmoneykeeper "github.com/raneet10/requestmoney/x/requestmoney/keeper"
 	requestmoneytypes "github.com/raneet10/requestmoney/x/requestmoney/types"
-  // this line is used by starport scaffolding # 1
+	// this line is used by starport scaffolding # 1
 )
 
 const appName = "requestmoney"
 
 var (
-	DefaultCLIHome = os.ExpandEnv("$HOME/.requestmoneycli")
+	DefaultCLIHome  = os.ExpandEnv("$HOME/.requestmoneycli")
 	DefaultNodeHome = os.ExpandEnv("$HOME/.requestmoneyd")
-	ModuleBasics = module.NewBasicManager(
+	ModuleBasics    = module.NewBasicManager(
 		genutil.AppModuleBasic{},
 		auth.AppModuleBasic{},
 		bank.AppModuleBasic{},
 		staking.AppModuleBasic{},
+		mint.AppModuleBasic{},
 		params.AppModuleBasic{},
 		supply.AppModuleBasic{},
 		requestmoney.AppModuleBasic{},
-    // this line is used by starport scaffolding # 2
+		// this line is used by starport scaffolding # 2
 	)
 
 	maccPerms = map[string][]string{
-		auth.FeeCollectorName:     nil,
+		auth.FeeCollectorName: nil,
+		mint.ModuleName:       {supply.Minter},
 		// this line is used by starport scaffolding # 2.1
 		staking.BondedPoolName:    {supply.Burner, supply.Staking},
 		staking.NotBondedPoolName: {supply.Burner, supply.Staking},
@@ -73,13 +76,14 @@ type NewApp struct {
 
 	subspaces map[string]params.Subspace
 
-	accountKeeper  auth.AccountKeeper
-	bankKeeper     bank.Keeper
-	stakingKeeper  staking.Keeper
-	supplyKeeper   supply.Keeper
-	paramsKeeper   params.Keeper
+	accountKeeper      auth.AccountKeeper
+	bankKeeper         bank.Keeper
+	stakingKeeper      staking.Keeper
+	supplyKeeper       supply.Keeper
+	mintKeeper         mint.Keeper
+	paramsKeeper       params.Keeper
 	requestmoneyKeeper requestmoneykeeper.Keeper
-  // this line is used by starport scaffolding # 3
+	// this line is used by starport scaffolding # 3
 	mm *module.Manager
 
 	sm *module.SimulationManager
@@ -98,14 +102,15 @@ func NewInitApp(
 	bApp.SetAppVersion(version.Version)
 
 	keys := sdk.NewKVStoreKeys(
-    bam.MainStoreKey,
-    auth.StoreKey,
-    staking.StoreKey,
+		bam.MainStoreKey,
+		auth.StoreKey,
+		staking.StoreKey,
 		supply.StoreKey,
-    params.StoreKey,
-    requestmoneytypes.StoreKey,
-    // this line is used by starport scaffolding # 5
-  )
+		mint.StoreKey,
+		params.StoreKey,
+		requestmoneytypes.StoreKey,
+		// this line is used by starport scaffolding # 5
+	)
 
 	tKeys := sdk.NewTransientStoreKeys(staking.TStoreKey, params.TStoreKey)
 
@@ -122,6 +127,8 @@ func NewInitApp(
 	app.subspaces[auth.ModuleName] = app.paramsKeeper.Subspace(auth.DefaultParamspace)
 	app.subspaces[bank.ModuleName] = app.paramsKeeper.Subspace(bank.DefaultParamspace)
 	app.subspaces[staking.ModuleName] = app.paramsKeeper.Subspace(staking.DefaultParamspace)
+	app.subspaces[mint.ModuleName] = app.paramsKeeper.Subspace(mint.DefaultParamspace)
+
 	// this line is used by starport scaffolding # 5.1
 
 	app.accountKeeper = auth.NewAccountKeeper(
@@ -151,31 +158,40 @@ func NewInitApp(
 		app.supplyKeeper,
 		app.subspaces[staking.ModuleName],
 	)
+	app.mintKeeper = mint.NewKeeper(
+		app.cdc, keys[mint.StoreKey],
+		app.subspaces[mint.ModuleName],
+		&stakingKeeper,
+		app.supplyKeeper,
+		auth.FeeCollectorName,
+	)
 
 	// this line is used by starport scaffolding # 5.2
 
 	app.stakingKeeper = *stakingKeeper.SetHooks(
 		staking.NewMultiStakingHooks(
-			// this line is used by starport scaffolding # 5.3
+		// this line is used by starport scaffolding # 5.3
 		),
 	)
 
 	app.requestmoneyKeeper = requestmoneykeeper.NewKeeper(
-		app.bankKeeper,
+		app.mintKeeper,
+		app.supplyKeeper,
 		app.cdc,
 		keys[requestmoneytypes.StoreKey],
 	)
 
-  // this line is used by starport scaffolding # 4
+	// this line is used by starport scaffolding # 4
 
 	app.mm = module.NewManager(
 		genutil.NewAppModule(app.accountKeeper, app.stakingKeeper, app.BaseApp.DeliverTx),
 		auth.NewAppModule(app.accountKeeper),
 		bank.NewAppModule(app.bankKeeper, app.accountKeeper),
 		supply.NewAppModule(app.supplyKeeper, app.accountKeeper),
-		requestmoney.NewAppModule(app.requestmoneyKeeper, app.bankKeeper),
+		mint.NewAppModule(app.mintKeeper),
+		requestmoney.NewAppModule(app.requestmoneyKeeper, app.mintKeeper, app.supplyKeeper),
 		staking.NewAppModule(app.stakingKeeper, app.accountKeeper, app.supplyKeeper),
-    // this line is used by starport scaffolding # 6
+		// this line is used by starport scaffolding # 6
 	)
 
 	app.mm.SetOrderEndBlockers(
@@ -188,10 +204,11 @@ func NewInitApp(
 		staking.ModuleName,
 		auth.ModuleName,
 		bank.ModuleName,
+		mint.ModuleName,
 		requestmoneytypes.ModuleName,
 		supply.ModuleName,
 		genutil.ModuleName,
-    // this line is used by starport scaffolding # 7
+		// this line is used by starport scaffolding # 7
 	)
 
 	app.mm.RegisterRoutes(app.Router(), app.QueryRouter())
