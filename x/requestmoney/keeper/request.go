@@ -14,7 +14,11 @@ func (k Keeper) CreateRequest(ctx sdk.Context, request types.Request) error {
 	key := []byte(types.RequestPrefix + request.ID)
 	value := k.cdc.MustMarshalBinaryLengthPrefixed(request)
 	store.Set(key, value)
-	err := k.SupplyKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, request.Creator, request.Value)
+	err := k.SupplyKeeper.MintCoins(ctx, types.ModuleName, request.Value)
+	if err != nil {
+		return err
+	}
+	err = k.SupplyKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, request.Creator, request.Value)
 	if err != nil {
 		return err
 	}

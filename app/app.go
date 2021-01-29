@@ -19,7 +19,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
-	"github.com/cosmos/cosmos-sdk/x/mint"
+
+	//"github.com/cosmos/cosmos-sdk/x/mint"
 	"github.com/cosmos/cosmos-sdk/x/params"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	"github.com/cosmos/cosmos-sdk/x/supply"
@@ -39,7 +40,7 @@ var (
 		auth.AppModuleBasic{},
 		bank.AppModuleBasic{},
 		staking.AppModuleBasic{},
-		mint.AppModuleBasic{},
+		//mint.AppModuleBasic{},
 		params.AppModuleBasic{},
 		supply.AppModuleBasic{},
 		requestmoney.AppModuleBasic{},
@@ -47,8 +48,8 @@ var (
 	)
 
 	maccPerms = map[string][]string{
-		auth.FeeCollectorName: nil,
-		mint.ModuleName:       {supply.Minter},
+		auth.FeeCollectorName:        nil,
+		requestmoneytypes.ModuleName: {supply.Minter},
 		// this line is used by starport scaffolding # 2.1
 		staking.BondedPoolName:    {supply.Burner, supply.Staking},
 		staking.NotBondedPoolName: {supply.Burner, supply.Staking},
@@ -76,11 +77,11 @@ type NewApp struct {
 
 	subspaces map[string]params.Subspace
 
-	accountKeeper      auth.AccountKeeper
-	bankKeeper         bank.Keeper
-	stakingKeeper      staking.Keeper
-	supplyKeeper       supply.Keeper
-	mintKeeper         mint.Keeper
+	accountKeeper auth.AccountKeeper
+	bankKeeper    bank.Keeper
+	stakingKeeper staking.Keeper
+	supplyKeeper  supply.Keeper
+	//mintKeeper         mint.Keeper
 	paramsKeeper       params.Keeper
 	requestmoneyKeeper requestmoneykeeper.Keeper
 	// this line is used by starport scaffolding # 3
@@ -106,7 +107,7 @@ func NewInitApp(
 		auth.StoreKey,
 		staking.StoreKey,
 		supply.StoreKey,
-		mint.StoreKey,
+		//	mint.StoreKey,
 		params.StoreKey,
 		requestmoneytypes.StoreKey,
 		// this line is used by starport scaffolding # 5
@@ -127,7 +128,7 @@ func NewInitApp(
 	app.subspaces[auth.ModuleName] = app.paramsKeeper.Subspace(auth.DefaultParamspace)
 	app.subspaces[bank.ModuleName] = app.paramsKeeper.Subspace(bank.DefaultParamspace)
 	app.subspaces[staking.ModuleName] = app.paramsKeeper.Subspace(staking.DefaultParamspace)
-	app.subspaces[mint.ModuleName] = app.paramsKeeper.Subspace(mint.DefaultParamspace)
+	//app.subspaces[mint.ModuleName] = app.paramsKeeper.Subspace(mint.DefaultParamspace)
 
 	// this line is used by starport scaffolding # 5.1
 
@@ -158,13 +159,13 @@ func NewInitApp(
 		app.supplyKeeper,
 		app.subspaces[staking.ModuleName],
 	)
-	app.mintKeeper = mint.NewKeeper(
+	/*app.mintKeeper = mint.NewKeeper(
 		app.cdc, keys[mint.StoreKey],
 		app.subspaces[mint.ModuleName],
 		&stakingKeeper,
 		app.supplyKeeper,
 		auth.FeeCollectorName,
-	)
+	)*/
 
 	// this line is used by starport scaffolding # 5.2
 
@@ -175,7 +176,7 @@ func NewInitApp(
 	)
 
 	app.requestmoneyKeeper = requestmoneykeeper.NewKeeper(
-		app.mintKeeper,
+		//app.mintKeeper,
 		app.supplyKeeper,
 		app.cdc,
 		keys[requestmoneytypes.StoreKey],
@@ -188,8 +189,8 @@ func NewInitApp(
 		auth.NewAppModule(app.accountKeeper),
 		bank.NewAppModule(app.bankKeeper, app.accountKeeper),
 		supply.NewAppModule(app.supplyKeeper, app.accountKeeper),
-		mint.NewAppModule(app.mintKeeper),
-		requestmoney.NewAppModule(app.requestmoneyKeeper, app.mintKeeper, app.supplyKeeper),
+		//mint.NewAppModule(app.mintKeeper),
+		requestmoney.NewAppModule(app.requestmoneyKeeper, app.supplyKeeper),
 		staking.NewAppModule(app.stakingKeeper, app.accountKeeper, app.supplyKeeper),
 		// this line is used by starport scaffolding # 6
 	)
@@ -204,7 +205,7 @@ func NewInitApp(
 		staking.ModuleName,
 		auth.ModuleName,
 		bank.ModuleName,
-		mint.ModuleName,
+		//mint.ModuleName,
 		requestmoneytypes.ModuleName,
 		supply.ModuleName,
 		genutil.ModuleName,

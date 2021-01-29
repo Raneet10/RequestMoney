@@ -7,14 +7,15 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/mint"
+
+	//"github.com/cosmos/cosmos-sdk/x/mint"
 	"github.com/cosmos/cosmos-sdk/x/supply"
 	"github.com/raneet10/requestmoney/x/requestmoney/types"
 )
 
 // Keeper of the requestmoney store
 type Keeper struct {
-	MintKeeper   mint.Keeper
+	//MintKeeper   mint.Keeper
 	SupplyKeeper supply.Keeper
 	storeKey     sdk.StoreKey
 	cdc          *codec.Codec
@@ -22,9 +23,8 @@ type Keeper struct {
 }
 
 // NewKeeper creates a requestmoney keeper
-func NewKeeper(mintKeeper mint.Keeper, supplyKeeper supply.Keeper, cdc *codec.Codec, key sdk.StoreKey) Keeper {
+func NewKeeper(supplyKeeper supply.Keeper, cdc *codec.Codec, key sdk.StoreKey) Keeper {
 	keeper := Keeper{
-		MintKeeper:   mintKeeper,
 		SupplyKeeper: supplyKeeper,
 		storeKey:     key,
 		cdc:          cdc,

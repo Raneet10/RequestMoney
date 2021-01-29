@@ -12,7 +12,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	"github.com/cosmos/cosmos-sdk/x/mint"
+
+	//"github.com/cosmos/cosmos-sdk/x/mint"
 	"github.com/cosmos/cosmos-sdk/x/supply"
 	"github.com/raneet10/requestmoney/x/requestmoney/client/cli"
 	"github.com/raneet10/requestmoney/x/requestmoney/client/rest"
@@ -76,19 +77,18 @@ func (AppModuleBasic) GetQueryCmd(cdc *codec.Codec) *cobra.Command {
 type AppModule struct {
 	AppModuleBasic
 
-	keeper       keeper.Keeper
-	mintKeeper   mint.Keeper
+	keeper keeper.Keeper
+	//mintKeeper   mint.Keeper
 	supplyKeeper supply.Keeper
 	// TODO: Add keepers that your application depends on
 
 }
 
 // NewAppModule creates a new AppModule object
-func NewAppModule(k keeper.Keeper, mintKeeper mint.Keeper, supplyKeeper supply.Keeper) AppModule {
+func NewAppModule(k keeper.Keeper, supplyKeeper supply.Keeper) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{},
 		keeper:         k,
-		mintKeeper:     mintKeeper,
 		supplyKeeper:   supplyKeeper,
 		// TODO: Add keepers that your application depends on
 	}
